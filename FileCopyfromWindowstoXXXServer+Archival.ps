@@ -1,0 +1,105 @@
+# Get a list of file sizes in a directory recursively
+$directory = "D:\PD\TestFiles"
+$fileSizes = @()
+$files = Get-ChildItem -Path $directory -File -Recurse | Where-Object {!$_.PSIsContainer}
+foreach ($file in $files) {
+    $fileSizes += $file.Length
+}
+
+
+# Get a list of file paths in the directory recursively
+$directory = "D:\PD\TestFiles"
+$fileNames = @()
+$files = Get-ChildItem -Path $directory -File -Recurse | Where-Object {!$_.PSIsContainer}
+
+$folderdate = Get-ChildItem -Path $directory -File 
+Write-Output " Files Downloaded in :: " $folderdate
+
+foreach ($file in $files) {
+    $fileNames += $file.FullName
+}
+Write-Output $fileNames
+
+Write-Output "-------------------------------------"
+
+#wait a duration 
+$duration = 20
+Write-Output "Timer started"
+Start-Sleep -Seconds $duration
+Write-Output "Timer finished"
+Write-Output "-------------------------------------"
+# Get a list of file sizes in a directory recursively
+$directory = "D:\PD\TestFiles"
+$fileSizes1 = @()
+$files = Get-ChildItem -Path $directory -File -Recurse | Where-Object {!$_.PSIsContainer}
+foreach ($file in $files) {
+  $fileSizes1 += $file.Length
+}
+
+
+#Loop through the file sizes and check for stability 
+$filedownloaded = @()
+  for ($i = 0; $i -lt $filesizes1.Count; $i++) {
+    if ($filesizes[$i] -eq $filesizes1[$i]) {
+      $filedownloaded += $fileNames[$i]
+    }
+  }
+Write-Output "----------------------------"
+Write-Output $filedownloaded
+Write-Output "----------------------------"
+
+# Loop through the files and recursively copy them
+$destination = "D:\PD\HHH\XFiles"
+foreach ($file in $filedownloaded) 
+{
+  if (Test-Path $file) 
+  {
+    Copy-Item -Path $file -Destination $destination
+	
+  if ($file -like '*.zip')
+	{
+		Write-Output "File Name -> "$file
+		#SCP Command for Secure file transfer from windows server to XX Server
+		scp $file <<Target Path>>
+		Write-Output "SCP Command Execution"
+	} #if ($file -like '*.zip')
+  } #if (Test-Path $file) 
+} #foreach ($file in $filedownloaded) 
+
+# Loop through the selected files and recursively move them
+$destination = "<<archive path>>"
+foreach ($file in $fileNames) {
+  if (Test-Path $file) {
+  Write-Output $file
+  $pp = $file.Split("\")
+  $check = 0
+  $destinationtemp = $destination
+  foreach($dirstr in $pp){ 
+    if($check  -eq 1){
+        if($dirstr -notlike "*.zip"){
+            New-Item -ItemType Directory -Path $destinationtemp -Name $dirstr -Force
+            $destinationtemp += "/"
+            $destinationtemp += "$dirstr"
+        }
+        #make directory in destinationtemp
+    }
+    if($dirstr -eq "TestFiles"){ #Replace the folder name here instead of process
+        $check = 1 
+    }
+  }
+  #move the files here
+  Move-Item -Path $file -Destination $destinationtemp
+  }
+}
+
+
+# remove empty folders after moving files
+$path = "D:\PD\TestFiles"
+$folders = Get-ChildItem -Path $path -Recurse | Where-Object {$_.PSIsContainer}
+
+foreach ($folder in $folders) {
+    $items = Get-ChildItem -Path $folder.FullName
+    if (!$items) {
+        Remove-Item -Path $folder.FullName -Recurse -Force
+    }
+}
